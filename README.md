@@ -2,6 +2,9 @@
 
 Tetris game clone in a HTML page based on JavaScript.
 
+Check deployment at:
+> https://tetris.eht.ociotec.com
+
 ## Run inside docker container
 
 To run the docker container win an nginx server on port `8888`, just execute:

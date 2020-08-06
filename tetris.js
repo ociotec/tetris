@@ -14,6 +14,7 @@ let playing;
 let score;
 let piecesCount;
 let level;
+let clearedLines;
 const PIECES_TO_INCREASE_LEVEL = 20;
 
 const width = 1 + 10 + 1;
@@ -164,22 +165,33 @@ function drawBoard() {
         }
     }
     context.fillStyle = COLOR_FONT;
-    context.font = "" + (cellSize * 2) + "px Verdana";
+    context.font = "bold small-caps " + (cellSize * 2) + "px Courier New";
     var posX = 10;
     var posY = 10 + (cellSize * 2);
     context.fillText("Tetris", posX, posY);
-    context.font = "" + cellSize + "px Verdana";
-    posY += cellSize + 10;
+
+    context.font = "" + (cellSize * 0.5) + "px Courier New";
+    posY += cellSize * 0.8;
     context.fillText("v" + VERSION, posX, posY);
+    posY += cellSize * 0.8;
+    context.fillText("By Emilio González Montaña", posX, posY);
+    posY += cellSize * 0.8;
+    context.fillText("https://github.com/ociotec/tetris", posX, posY);
+
+    context.font = "" + cellSize + "px Courier New";
+    posY += cellSize * 1.5;
+    context.fillText("Level:  " + level, posX, posY);
     posY += cellSize;
-    context.fillText("Level: " + level, posX, posY);
-    posY += cellSize;
-    context.fillText("Speed: " + speed, posX, posY);
-    posY += cellSize;
-    context.fillText("Score: " + score, posX, posY);
+    context.fillText("Score:  " + score, posX, posY);
     posY += cellSize;
     context.fillText("Pieces: " + piecesCount, posX, posY);
-    posY += cellSize + 10;
+    posY += cellSize;
+    context.fillText("Lines:  " + clearedLines, posX, posY);
+    posY += cellSize;
+    context.fillText("Speed:  " + speed, posX, posY);
+
+    context.font = "" + (cellSize * 0.5) + "px Courier New";
+    posY += cellSize * 1.5;
     context.fillText(status, posX, posY);
 }
 
@@ -256,6 +268,7 @@ function resetBoard() {
     level = 1;
     speed = INIT_SPEED;
     score = 0;
+    clearedLines = 0;
     piecesCount = 0;
     playing = true;
     status = "";
@@ -321,8 +334,13 @@ function checkLine(j) {
     return fullLine && !allWalls;
 }
 
+function calculateScore(lines) {
+    return (lines <= 0) ? 0 : (lines + scoreLines(lines - 1));
+}
+
 function scoreLines(lines) {
-    var points = (lines <= 0) ? 0 : (lines + scoreLines(lines - 1));
+    clearedLines += lines;
+    var points = calculateScore(lines);
     if (points > 0) {
         lineAudio.play();
     }
@@ -456,7 +474,7 @@ function tetris(id) {
 
     initBoard();
     resetBoard();
-    status = "Click the board to start...";
+    status = "Use arrow keys to move, click to start...";
     drawBoard();
 
     window.addEventListener("resize", initBoard);
