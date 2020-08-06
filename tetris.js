@@ -1,11 +1,19 @@
+const VERSION = "0.2.0"
+
 let canvas;
 let context;
 let timer = null;
-const period = 10;
-let speed = 50;
+const PERIOD = 10;
+let speed;
+const INIT_SPEED = 40;
 let frameCounter = 0;
 let cellSize;
 let cleaningLines = false;
+
+let score;
+let piecesCount;
+let level;
+const PIECES_TO_INCREASE_LEVEL = 20;
 
 const width = 1 + 10 + 1;
 const height = 20 + 1;
@@ -25,6 +33,7 @@ const CELL_CLEAR = 8;
 const CELL_EMPTY = 9;
 
 const colors = ["#00FFFF", "#FFA500", "#0000FF", "#44FF44", "#FF0000", "#FFFF00", "#800080", "#999999", "#FFFFFF", "#000000"];
+const COLOR_FONT = "#EEEEEE";
 
 let currentPiece = null;
 let currentPieceX;
@@ -147,13 +156,29 @@ function drawBoard() {
             }
         }
     }
+    context.fillStyle = COLOR_FONT;
+    context.font = "" + (cellSize * 2) + "px Verdana";
+    var posX = 10;
+    var posY = 10 + (cellSize * 2);
+    context.fillText("Tetris", posX, posY);
+    context.font = "" + cellSize + "px Verdana";
+    posY += cellSize + 10;
+    context.fillText("v" + VERSION, posX, posY);
+    posY += cellSize;
+    context.fillText("Level: " + level, posX, posY);
+    posY += cellSize;
+    context.fillText("Speed: " + speed, posX, posY);
+    posY += cellSize;
+    context.fillText("Score: " + score, posX, posY);
+    posY += cellSize;
+    context.fillText("Pieces: " + piecesCount, posX, posY);
 }
 
 function setTimer() {
     if (timer !== null) {
         clearInterval(timer);
     }
-    timer = setInterval(frame, period);
+    timer = setInterval(frame, PERIOD);
 }
 
 function doesItFit(piece, x, y) {
@@ -191,6 +216,22 @@ function putPiece(piece, x, y) {
     }
 }
 
+function increasePiece() {
+    piecesCount++;
+    if (piecesCount % PIECES_TO_INCREASE_LEVEL === 0) {
+        if (speed > INIT_SPEED / 2) {
+            speed -= 5;
+        } else if (speed > INIT_SPEED / 4) {
+            speed -= 4;
+        } else if (speed > INIT_SPEED / 8) {
+            speed -= 2;
+        } else if (speed > 1) {
+            speed -= 1;
+        }
+        level++;
+    }
+}
+
 function initBoard() {
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -200,6 +241,11 @@ function initBoard() {
     offsetX = Math.floor((canvas.width - (width * cellSize)) / 2);
     offsetY = Math.floor((canvas.height - (height * cellSize)) / 2);
     frameCounter = 0;
+
+    level = 1;
+    speed = INIT_SPEED;
+    score = 0;
+    piecesCount = 0;
 
     cells = [];
     cells.length = height;
@@ -232,6 +278,7 @@ function moveCurrentPieceDown() {
             currentPieceY++;
         } else {
             putPiece(currentPiece[currentPieceRotation], currentPieceX, currentPieceY);
+            increasePiece();
             currentPiece = null;
             checkLines();
         }
@@ -261,6 +308,10 @@ function checkLine(j) {
     return fullLine && !allWalls;
 }
 
+function scoreLines(lines) {
+    return (lines <= 0) ? 0 : (lines + scoreLines(lines - 1));
+}
+
 function checkLines() {
     var lines = 0;
     for (var j = 0; j < height; j++) {
@@ -276,6 +327,7 @@ function checkLines() {
             frameCounter = 0;
         }
     }
+    score += scoreLines(lines);
 }
 
 function moveLinesDown(y) {
