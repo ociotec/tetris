@@ -1,4 +1,4 @@
-const VERSION = "0.2.0"
+const VERSION = "0.3.0"
 
 let canvas;
 let context;
@@ -10,6 +10,7 @@ let frameCounter = 0;
 let cellSize;
 let cleaningLines = false;
 
+let playing;
 let score;
 let piecesCount;
 let level;
@@ -20,6 +21,12 @@ const height = 20 + 1;
 let cells = [];
 let offsetX;
 let offsetY;
+
+var firstInit = true;
+var status;
+var backgroundAudio;
+var lineAudio;
+var gameOverAudio;
 
 const CELL_STICK = 0;
 const CELL_L1 = 1;
@@ -172,6 +179,8 @@ function drawBoard() {
     context.fillText("Score: " + score, posX, posY);
     posY += cellSize;
     context.fillText("Pieces: " + piecesCount, posX, posY);
+    posY += cellSize + 10;
+    context.fillText(status, posX, posY);
 }
 
 function setTimer() {
@@ -240,12 +249,16 @@ function initBoard() {
     cellSize = Math.min(horizontalCellSize, verticalCellSize);
     offsetX = Math.floor((canvas.width - (width * cellSize)) / 2);
     offsetY = Math.floor((canvas.height - (height * cellSize)) / 2);
-    frameCounter = 0;
+}
 
+function resetBoard() {
+    frameCounter = 0;
     level = 1;
     speed = INIT_SPEED;
     score = 0;
     piecesCount = 0;
+    playing = true;
+    status = "";
 
     cells = [];
     cells.length = height;
@@ -309,14 +322,17 @@ function checkLine(j) {
 }
 
 function scoreLines(lines) {
-    return (lines <= 0) ? 0 : (lines + scoreLines(lines - 1));
+    var points = (lines <= 0) ? 0 : (lines + scoreLines(lines - 1));
+    if (points > 0) {
+        lineAudio.play();
+    }
+    return points;
 }
 
 function checkLines() {
     var lines = 0;
     for (var j = 0; j < height; j++) {
         if (checkLine(j)) {
-            console.log("Line " + j + " is full");
             for (var i = 0; i < width; i++) {
                 if (cells[j][i] != CELL_WALL) {
                     cells[j][i] = CELL_CLEAR;
@@ -343,7 +359,6 @@ function moveLinesDown(y) {
 function cleanLines() {
     for (var j = 0; j < height; j++) {
         if (checkLine(j)) {
-            console.log("Cleaning line " + j);
             moveLinesDown(j);
         }
     }
@@ -375,28 +390,44 @@ function frame() {
 }
 
 function gameOver() {
-    initBoard();
+    currentPiece = null;
+    playing = false;
+    clearInterval(timer);
+    status = "GAME OVER! press ESC to restart";
+    backgroundAudio.pause();
+    gameOverAudio.play();
 }
 
 function keydown(event) {
     let processed = true;
     let key = event.which;
-    //console.log("Key down event: " + key);
     switch (key) {
         case 37: // Left arrow
-            moveCurrentPieceLeft();
+            if (playing) {
+                moveCurrentPieceLeft();
+            }
             break;
         case 39: // Right arrow
-            moveCurrentPieceRight();
+            if (playing) {
+                moveCurrentPieceRight();
+            }
             break;
         case 38: // Up arrow
-            rotateCurrentPiece();
+            if (playing) {
+                rotateCurrentPiece();
+            }
             break;
         case 40: // Down arrow
-            moveCurrentPieceDown();
+            if (playing) {
+                moveCurrentPieceDown();
+            }
             break;
         case 27: // Escape
-            initBoard();
+            resetBoard();
+            setTimer();
+            gameOverAudio.pause();
+            backgroundAudio.currentTime = 0;
+            backgroundAudio.play();
             break;
         default:
             processed = false;
@@ -410,10 +441,24 @@ function keydown(event) {
 function tetris(id) {
     canvas = document.getElementById(id);
     context = canvas.getContext('2d');
+    backgroundAudio = new Audio('tetris.mp3');
+    lineAudio = new Audio('line.mp3');
+    gameOverAudio = new Audio('game_over.mp3');
+    backgroundAudio.loop = true;
+    canvas.onclick = function() {
+        if (firstInit) {
+            firstInit = false;
+            backgroundAudio.play();
+            status = "";
+            setTimer();
+        }
+    };
+
     initBoard();
+    resetBoard();
+    status = "Click the board to start...";
     drawBoard();
 
-    setTimer();
     window.addEventListener("resize", initBoard);
     window.addEventListener("keydown", keydown);
 }

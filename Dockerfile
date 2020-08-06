@@ -3,4 +3,4 @@ LABEL maintainer="emilio@ociotec.com"
 
 WORKDIR /usr/share/nginx/html
 
-COPY index.html tetris.css tetris.js favicon.png ./
+COPY index.html tetris.css tetris.js favicon.png *.mp3 ./
