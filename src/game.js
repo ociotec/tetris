@@ -19,7 +19,7 @@ class Game {
     }
 
     gameOver() {
-        this.status = "GAME OVER! press ESC to restart";
+        this.status = "GAME OVER! :(\nPress ESC to restart";
     }
 
     increasePiece() {
@@ -49,10 +49,9 @@ class Game {
         return points;
     }    
 
-    draw(context, cellSize) {
+    draw(context, cellSize, posX) {
         context.fillStyle = COLOR_FONT;
         context.font = 'bold small-caps ' + (cellSize * 2) + 'px Courier New';
-        var posX = 10;
         var posY = 10 + (cellSize * 2);
         context.fillText('Tetris', posX, posY);
     
@@ -78,7 +77,10 @@ class Game {
     
         context.font = "" + (cellSize * 0.5) + "px Courier New";
         posY += cellSize * 1.5;
-        context.fillText(this.status, posX, posY);
+        this.status.split('\n').forEach(function(line) {
+            context.fillText(line, posX, posY);
+            posY += cellSize * 0.5;
+        });
     }
 
 }

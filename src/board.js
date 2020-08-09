@@ -226,7 +226,8 @@ class Board {
                 }
             }
         }
-        this.game.draw(this.context, this.cellSize);
+        var gamePosX = 10 + this.offsetX + this.cellSize * this.width;
+        this.game.draw(this.context, this.cellSize, gamePosX);
     }
     
 }

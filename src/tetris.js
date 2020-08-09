@@ -28,7 +28,7 @@ class Tetris {
         this.firstInit = true;
 
         this.initGame();
-        this.game.status = 'Use arrow keys to move, click to start...';
+        this.game.status = 'Use arrow keys to move\nClick to start...';
         this.board.draw();
     }
 
