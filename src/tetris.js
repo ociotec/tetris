@@ -1,138 +1,140 @@
 const VERSION = "0.4.0"
-
-let board;
-let game;
-
-let canvas;
-let context;
-let timer = null;
 const PERIOD = 10;
-let frameCounter = 0;
-let cleaningLines = false;
 
-let playing;
+class Tetris {
 
-var firstInit = true;
-var backgroundAudio;
-var lineAudio;
-var gameOverAudio;
+    constructor(canvasId) {
+        var tetris = this;
+        this.canvas = document.getElementById(canvasId);
+        this.canvas.addEventListener('click', function() { tetris.gainFocus(); });
+        this.context = canvas.getContext('2d');
+        this.game = new Game(VERSION);
+        this.board = new Board(this.canvas, this.context, this.game,
+                               function() { tetris.gameOver(); }, function() { tetris.line(); },
+                               window.innerWidth, window.innerHeight);
 
-function setTimer() {
-    if (timer !== null) {
-        clearInterval(timer);
+        window.addEventListener('resize', function() { tetris.resize(); });
+        window.addEventListener('keydown', function(event) { tetris.keydown(event); });
+    
+        this.backgroundAudio = new Audio('sounds/tetris.mp3');
+        this.backgroundAudio.loop = true;
+        this.lineAudio = new Audio('sounds/line.mp3');
+        this.gameOverAudio = new Audio('sounds/game_over.mp3');
+
+        this.timer = null;
+        this.frameCounter = 0;
+        this.cleaningLines = false;
+        this.playing;
+        this.firstInit = true;
+
+        this.initGame();
+        this.game.status = 'Use arrow keys to move, click to start...';
+        this.board.draw();
     }
-    timer = setInterval(frame, PERIOD);
-}
 
-function initGame() {
-    board.reset();
-    frameCounter = 0;
-    playing = true;
-}
-
-function resetGame() {
-    initGame();
-    setTimer();
-    gameOverAudio.pause();
-    backgroundAudio.currentTime = 0;
-    backgroundAudio.play();
-}
-
-function frame() {
-    if (cleaningLines) {
-        frameCounter = (frameCounter + 1) % game.speed;
-        if (frameCounter == 0) {
-            board.cleanLines();;
-            cleaningLines = false;
-        }
+    resize() {
+        this.resetGame();
+        this.board.resize(window.innerWidth, window.innerHeight);
     }
-    else if (board.newPieceIsNeeded()) {
-        board.addNewPiece();
-    } else {
-        frameCounter = (frameCounter + 1) % game.speed;
-        if (frameCounter == 0) {
-            board.moveCurrentPieceDown();
-        }
-    }
-    board.draw();
-}
 
-function gameOver() {
-    currentPiece = null;
-    playing = false;
-    clearInterval(timer);
-    backgroundAudio.pause();
-    gameOverAudio.play();
-}
-
-function line() {
-    cleaningLines = true;
-    frameCounter = 0;
-    lineAudio.play();
-}
-
-function keydown(event) {
-    let processed = true;
-    let key = event.which;
-    switch (key) {
-        case 37: // Left arrow
-            if (playing) {
-                board.moveCurrentPieceLeft();
-            }
-            break;
-        case 39: // Right arrow
-            if (playing) {
-                board.moveCurrentPieceRight();
-            }
-            break;
-        case 38: // Up arrow
-            if (playing) {
-                board.rotateCurrentPiece();
-            }
-            break;
-        case 40: // Down arrow
-            if (playing) {
-                board.moveCurrentPieceDown();
-            }
-            break;
-        case 27: // Escape
-            resetGame();
-            break;
-        default:
-            processed = false;
-            break;
-    }
-    if (!processed) {
-        event.preventDefault();
-    }
-}
-
-function tetris(id) {
-    canvas = document.getElementById(id);
-    context = canvas.getContext('2d');
-    game = new Game(VERSION);
-    board = new Board(canvas, context, game, gameOver,line, window.innerWidth, window.innerHeight);
-
-    backgroundAudio = new Audio('sounds/tetris.mp3');
-    lineAudio = new Audio('sounds/line.mp3');
-    gameOverAudio = new Audio('sounds/game_over.mp3');
-    backgroundAudio.loop = true;
-
-    canvas.onclick = function() {
-        if (firstInit) {
-            firstInit = false;
-            backgroundAudio.play();
-            game.status = '';
-            setTimer();
+    gainFocus() {
+        if (this.firstInit) {
+            this.firstInit = false;
+            this.backgroundAudio.play();
+            this.game.status = '';
+            this.setTimer();
         }
     };
 
-    initGame();
-    game.status = 'Use arrow keys to move, click to start...';
-    board.draw();
+    setTimer() {
+        var tetris = this;
+        if (this.timer != null) {
+            clearInterval(this.timer);
+        }
+        this.timer = setInterval(function() { tetris.frame(); }, PERIOD);
+    }
+    
+    initGame() {
+        this.board.reset();
+        this.frameCounter = 0;
+        this.playing = true;
+    }
+    
+    resetGame() {
+        this.initGame();
+        this.setTimer();
+        this.gameOverAudio.pause();
+        this.backgroundAudio.currentTime = 0;
+        this.backgroundAudio.play();
+    }
+    
+    increaseFrame() {
+        this.frameCounter = (this.frameCounter + 1) % this.game.speed;
+        return this.frameCounter == 0;
+    }
 
-    window.addEventListener('resize', function() {
-        board.reset();
-    });
-    window.addEventListener('keydown', keydown);
+    frame() {
+        if (this.cleaningLines) {
+            if (this.increaseFrame()) {
+                this.board.cleanLines();;
+                this.cleaningLines = false;
+            }
+        }
+        else if (!this.board.addNewPieceIfNeeded()) {
+            if (this.increaseFrame()) {
+                this.board.moveCurrentPieceDown();
+            }
+        }
+        this.board.draw();
+    }
+    
+    gameOver() {
+        this.playing = false;
+        clearInterval(this.timer);
+        this.backgroundAudio.pause();
+        this.gameOverAudio.play();
+    }
+    
+    line() {
+        this.cleaningLines = true;
+        this.frameCounter = 0;
+        this.lineAudio.play();
+    }
+    
+    keydown(event) {
+        let processed = true;
+        let key = event.which;
+        switch (key) {
+            case 37: // Left arrow
+                if (this.playing) {
+                    this.board.moveCurrentPieceLeft();
+                }
+                break;
+            case 39: // Right arrow
+                if (this.playing) {
+                    this.board.moveCurrentPieceRight();
+                }
+                break;
+            case 38: // Up arrow
+                if (this.playing) {
+                    this.board.rotateCurrentPiece();
+                }
+                break;
+            case 40: // Down arrow
+                if (this.playing) {
+                    this.board.moveCurrentPieceDown();
+                }
+                break;
+            case 27: // Escape
+            this.resetGame();
+                break;
+            default:
+                processed = false;
+                break;
+        }
+        if (!processed) {
+            event.preventDefault();
+        }
+    }
+    
 }

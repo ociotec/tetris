@@ -10,6 +10,15 @@ class Board {
 
         this.canvas = canvas;
         this.context = context;
+        this.resize(screenWidth, screenHeight);
+
+        this.currentPiece = null;
+        this.currentPieceRotation;
+        this.currentPieceX;
+        this.currentPieceY;
+    }
+
+    resize(screenWidth, screenHeight) {
         this.canvas.width  = screenWidth;
         this.canvas.height = screenHeight;
         let horizontalCellSize = Math.floor(this.canvas.width / this.width);
@@ -17,12 +26,6 @@ class Board {
         this.cellSize = Math.min(horizontalCellSize, verticalCellSize);
         this.offsetX = Math.floor((this.canvas.width - (this.width * this.cellSize)) / 2);
         this.offsetY = Math.floor((this.canvas.height - (this.height * this.cellSize)) / 2);
-
-        this.currentPiece = null;
-        this.currentPieceRotation;
-        this.currentPieceX;
-        this.currentPieceY;
-
     }
 
     reset() {
@@ -43,22 +46,25 @@ class Board {
         this.game.reset();
     }
    
-    newPieceIsNeeded() {
-        return this.currentPiece == null;
-    }
-
-    addNewPiece() {
-        if (this.newPieceIsNeeded()) {
-            this.currentPiece = Piece.getRandom();
-            this.currentPieceRotation = 0;
-            this.currentPieceX = Math.floor(this.width / 2) - 2;
-            this.currentPieceY = 0;
-            if (!board.doesItFit(this.currentPiece[this.currentPieceRotation],
-                                 this.currentPieceX, this.currentPieceY)) {
-                game.gameOver();
+    addNewPieceIfNeeded() {
+        var added = false;
+        if (this.currentPiece == null) {
+            var newPiece = Piece.getRandom();
+            var newPieceRotation = 0;
+            var newPieceX = Math.floor((this.width - newPiece.length) / 2);
+            var newPieceY = 0;
+            if (this.doesItFit(newPiece[newPieceRotation], newPieceX, newPieceY)) {
+                this.currentPiece = newPiece;
+                this.currentPieceRotation = newPieceRotation;
+                this.currentPieceX = newPieceX;
+                this.currentPieceY = newPieceY;
+                added = true;
+            } else {
+                this.game.gameOver();
                 this.gameOverCallback();
             }
         }
+        return added;
     }
 
     moveCurrentPieceLeft() {
@@ -152,7 +158,7 @@ class Board {
                     }
                 }
             }
-            game.increasePiece();
+            this.game.increasePiece();
         }
     }
 
@@ -220,7 +226,7 @@ class Board {
                 }
             }
         }
-        this.game.draw(context, this.cellSize);
+        this.game.draw(this.context, this.cellSize);
     }
     
 }
