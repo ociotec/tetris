@@ -51,7 +51,7 @@ class Board {
         if (this.currentPiece == null) {
             var newPiece = Piece.getRandom();
             var newPieceRotation = 0;
-            var newPieceX = Math.floor((this.width - newPiece.length) / 2);
+            var newPieceX = Math.floor((this.width - newPiece[newPieceRotation].length) / 2);
             var newPieceY = 0;
             if (this.doesItFit(newPiece[newPieceRotation], newPieceX, newPieceY)) {
                 this.currentPiece = newPiece;
