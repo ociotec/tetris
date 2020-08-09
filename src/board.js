@@ -16,6 +16,7 @@ class Board {
         this.currentPieceRotation;
         this.currentPieceX;
         this.currentPieceY;
+        this.nextPiece = Piece.getRandom();
     }
 
     resize(screenWidth, screenHeight) {
@@ -54,10 +55,11 @@ class Board {
             var newPieceX = Math.floor((this.width - newPiece[newPieceRotation].length) / 2);
             var newPieceY = 0;
             if (this.doesItFit(newPiece[newPieceRotation], newPieceX, newPieceY)) {
-                this.currentPiece = newPiece;
+                this.currentPiece = this.nextPiece;
                 this.currentPieceRotation = newPieceRotation;
                 this.currentPieceX = newPieceX;
                 this.currentPieceY = newPieceY;
+                this.nextPiece = newPiece;
                 added = true;
             } else {
                 this.game.gameOver();
@@ -199,35 +201,62 @@ class Board {
         this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }    
 
-    drawCell(x, y, cell = null) {
-        if (cell === null) {
-            cell = this.cells[y][x];
-        }
+    drawAbsoluteCell(posX, posY, cell) {
         this.context.fillStyle = CellColor[cell];
-        let posX = this.offsetX + (this.cellSize * x);
-        let posY = this.offsetY + (this.cellSize * y);
         this.context.fillRect(posX, posY, this.cellSize - 1, this.cellSize - 1);
     }
-        
-    draw() {
-        this.drawBackground();
-        for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width; x++) {
-                this.drawCell(x, y);
-            }
-        }
-        if (this.currentPiece !== null) {
-            for (var j = 0; j < 4; j++) {
-                for (var i = 0; i < 4; i++) {
-                    const pieceCell = this.currentPiece[this.currentPieceRotation][j][i];
+
+    drawRelativeCell(x, y) {
+        let posX = this.offsetX + (this.cellSize * x);
+        let posY = this.offsetY + (this.cellSize * y);
+        var cell = this.cells[y][x];
+        this.drawAbsoluteCell(posX, posY, cell);
+    }
+
+    drawPieceRelative(piece, rotation, x, y) {
+        var posX = this.offsetX + (x * this.cellSize);
+        var posY = this.offsetY + (y * this.cellSize);
+        this.drawPieceAbsolute(piece, rotation, posX, posY);
+    }
+
+    drawPieceAbsolute(piece, rotation, x, y) {
+        if (piece != null) {
+            for (var j = 0; j < piece[rotation].length; j++) {
+                for (var i = 0; i < piece[rotation][j].length; i++) {
+                    const pieceCell = piece[rotation][j][i];
                     if (pieceCell !== CellType.EMPTY) {
-                        this.drawCell(this.currentPieceX + i, this.currentPieceY + j, pieceCell);
+                        let posX = x + (this.cellSize * i);
+                        let posY = y + (this.cellSize * j);
+                        this.drawAbsoluteCell(posX, posY, pieceCell);
                     }
                 }
             }
         }
-        var gamePosX = 10 + this.offsetX + this.cellSize * this.width;
-        this.game.draw(this.context, this.cellSize, gamePosX);
+    }
+        
+    drawNextPiece(gamePosX, gamePosY) {
+        if (this.nextPiece != null) {
+            gamePosY += 10;
+            this.drawPieceAbsolute(this.nextPiece, 0, gamePosX, gamePosY);
+            gamePosY += this.cellSize * this.nextPiece[0].length;
+        }
+        return gamePosY;
+    }
+
+    draw() {
+        this.drawBackground();
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                this.drawRelativeCell(x, y);
+            }
+        }
+        this.drawPieceRelative(this.currentPiece, this.currentPieceRotation,
+                               this.currentPieceX, this.currentPieceY);
+        var gamePosX = 20 + this.offsetX + this.cellSize * this.width;
+        var gamePosY = 10;
+        gamePosY = this.game.drawTop(this.context, this.cellSize, gamePosX, gamePosY);
+        gamePosY = this.drawNextPiece(gamePosX, gamePosY);
+        gamePosY = this.game.drawBottom(this.context, this.cellSize, gamePosX, gamePosY);
     }
     
 }

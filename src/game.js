@@ -49,10 +49,10 @@ class Game {
         return points;
     }    
 
-    draw(context, cellSize, posX) {
+    drawTop(context, cellSize, posX, posY) {
         context.fillStyle = COLOR_FONT;
         context.font = 'bold small-caps ' + (cellSize * 2) + 'px Courier New';
-        var posY = 10 + (cellSize * 2);
+        posY += (cellSize * 2);
         context.fillText('Tetris', posX, posY);
     
         context.font = '' + (cellSize * 0.5) + 'px Courier New';
@@ -62,7 +62,16 @@ class Game {
         context.fillText('By Emilio González Montaña', posX, posY);
         posY += cellSize * 0.8;
         context.fillText('https://github.com/ociotec/tetris', posX, posY);
-    
+
+        context.font = '' + cellSize + 'px Courier New';
+        posY += cellSize * 1.5;
+        context.fillText("Next piece:", posX, posY);
+
+        return posY;
+    }
+
+    drawBottom(context, cellSize, posX, posY) {
+        context.fillStyle = COLOR_FONT;
         context.font = '' + cellSize + 'px Courier New';
         posY += cellSize * 1.5;
         context.fillText("Level:  " + this.level, posX, posY);
@@ -81,6 +90,8 @@ class Game {
             context.fillText(line, posX, posY);
             posY += cellSize * 0.5;
         });
+
+        return posY;
     }
 
 }
