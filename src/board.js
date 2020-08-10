@@ -192,6 +192,7 @@ class Board {
         }
         if (lines > 0) {
             this.lineCallback(lines);
+            this.game.scoreLines(lines);
         }
         return lines;
     }

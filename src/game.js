@@ -39,7 +39,7 @@ class Game {
     }
 
     calculateScore(lines) {
-        return (lines <= 0) ? 0 : (lines + this.scoreLines(lines - 1));
+        return (lines <= 0) ? 0 : (lines + this.calculateScore(lines - 1));
     }
     
     scoreLines(lines) {
