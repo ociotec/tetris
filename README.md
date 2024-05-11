@@ -3,7 +3,7 @@
 Tetris game clone in a HTML page based on JavaScript.
 
 Check deployment at:
-> https://tetris.eht.ociotec.com
+> https://tetris.ociotec.com
 
 ![Tetris screenshot](screenshot.png)
 
